@@ -4550,6 +4550,8 @@ function about() {
     ${typeof QURAN_REAL !== "undefined" ? `<div class="sh-notice">${esc(QURAN_REAL.source.notice.join("\n"))}</div>` : ""}
     <h2 class="sh-h" style="font-size:19px;margin-top:6px">Fonts</h2>
     <p class="sh-note" style="margin:0;font-size:14px;line-height:1.5">Quran text: <b>KFGQPC Hafs Uthmanic Script 2.0</b>, © King Fahd Glorious Quran Printing Complex, used unmodified; <b>Amiri Quran</b> (SIL Open Font Licence) draws any sign it cannot. ${fontOk("KFGQPC Hafs") ? "✓ loaded" : "not loaded here, using a stand-in font"}<br>Lisan al-Dawat words: <b>Kanz-al-Lulu</b>, © 2025 Abdulqadir Abdeali Jariwala. ${fontOk("Kanz-al-Lulu") ? "✓ loaded" : "not loaded here, using a stand-in font"}</p>
+    <h2 class="sh-h" style="font-size:19px;margin-top:6px">Tasmee’ listening</h2>
+    <p class="sh-note" style="margin:0;font-size:14px;line-height:1.5">In the phone app, recitation is recognised on the phone itself, and your voice is not sent anywhere. It uses the <b>whisper-base-ar-quran</b> model by <a href="https://huggingface.co/tarteel-ai/whisper-base-ar-quran" target="_blank" rel="noopener" style="color:var(--teal)">Tarteel AI</a> (Apache License 2.0), built on OpenAI’s Whisper (MIT Licence), and runs it with <a href="https://github.com/ggml-org/whisper.cpp" target="_blank" rel="noopener" style="color:var(--teal)">whisper.cpp</a> by the ggml authors (MIT Licence).</p>
     <button class="sh-btn alt" id="shCloseSheet">Close</button></div></div>`;
 }
 const closeSheet = () => { $("#sh-modal").innerHTML = ""; };
