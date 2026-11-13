@@ -3975,7 +3975,7 @@ window.__enterAyat = () => { closeSheet(); rebuild(); home(); };
    In the real phone app the session key belongs in the phone's secure storage (Keychain / Keystore). This web build keeps it in localStorage. */
 (() => {
 "use strict";
-const DEFAULT_BASE = "https://huruf-server-shabbirmaanaks-projects.vercel.app/api/v1";
+const DEFAULT_BASE = "https://huruf-server.vercel.app/api/v1";
 let base = String(window.HURUF_API || DEFAULT_BASE).replace(/\/+$/, "");
 // the five puzzle games keep what a person has finished in the phone, under these names
 const PROGRESS_KEYS = { crossword: "xwProgress", wordsearch: "wsProgress", ayatmatch: "amProgress", surahmatch: "smProgress", ayahbuilder: "abProgress" };
