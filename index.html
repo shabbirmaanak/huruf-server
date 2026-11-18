@@ -219,6 +219,7 @@ body.fq-app #sh-main::-webkit-scrollbar{display:none}
 .fq-greet .n{font:500 25px/1.15 'Alegreya',serif}
 .ar{direction:rtl}
 .kz{font-family:'Kanz-al-Lulu','Amiri',serif;white-space:pre-wrap}
+.hon{font-size:.5em;vertical-align:1em;line-height:0;margin-inline-start:.15em}
 .hf{font-family:'KFGQPC Hafs','Amiri Quran',serif}
 /* the Mishkat (the owner's lantern) and the marble of the Rawdat */
 .mk{display:inline-block;flex:none;position:relative;background:var(--mishkat) center bottom/contain no-repeat;filter:grayscale(.9) brightness(.8) contrast(.9) opacity(.55);transition:filter 1.2s ease}
@@ -283,6 +284,16 @@ body.fq-app #sh-main::-webkit-scrollbar{display:none}
 .fq-welcome b{font:500 22px 'Alegreya',serif}
 .fq-welcome .mk{width:80px;height:98px}
 
+/* ===== iPhone and Android (Nov 2026): keep everything inside the safe area (Dynamic Island, notch, home bar, rounded corners) ===== */
+:root{--sat:env(safe-area-inset-top,0px);--sab:env(safe-area-inset-bottom,0px);-webkit-text-size-adjust:100%;text-size-adjust:100%}
+/* the game area fills exactly the space between the top and bottom safe areas; the games' own 100dvh screens fit inside it */
+#gamewrap:not([hidden]){display:flex;flex-direction:column;height:calc(100dvh - var(--sat) - var(--sab));overflow:hidden}
+#gamewrap>[id^="g-"]:not([hidden]){flex:1;min-height:0;display:flex;flex-direction:column;position:relative}
+#gamewrap>[id^="g-"]>#app{flex:1;min-height:0;height:auto !important;max-height:none !important;overflow-y:auto;-webkit-overflow-scrolling:touch}
+#gamewrap>[id^="g-"]>#app.playing{overflow:hidden}
+.fq-cover,.fq-niyyat,.sh-welcome{min-height:calc(100dvh - var(--sat) - var(--sab))}
+/* iPhone zooms into any text box smaller than 16px: keep them at 16px or more */
+input,select,textarea{font-size:max(16px,1em)}
 [hidden]{display:none !important}
 
 .sh-notice{font:12.5px/1.5 ui-monospace,Menlo,monospace;white-space:pre-wrap;background:var(--paper);border:1px solid var(--stone);border-radius:12px;padding:10px;color:var(--muted);direction:ltr;text-align:left}
@@ -4917,6 +4928,9 @@ const HJ = (() => {
 const toAr = (n) => String(n).replace(/\d/g, (d) => "٠١٢٣٤٥٦٧٨٩"[d]);
 /* Kanz al-Lulu draws رض قس ط ع ع م ص ع as small raised marks when a space follows them: keep that space at the end of a name. */
 const hon = (t) => (/(رض|قس|ع م|ص ع|ط ع|د م)$/.test(t) ? t + " " : t);
+/* Honorifics after a name are drawn small and raised. Kanz al-Lulu can do this itself on Android, but iPhones do not apply that
+   ligature, so the app styles them the same way on both. */
+const honHtml = (t) => esc(t).replace(/(^|\s)(رض|قس|ع م|ص ع|ط ع|د م)(?=\s|$)/g, '$1<span class="hon">$2</span>');
 const ursDay = (w) => { const m = String(w || "").match(/^\s*(\d{1,2})\s/); return m ? +m[1] : null; };
 
 /* ---------- Kawakib: the Silsila of the 53 Duat and the Urs of each month (the owner's data, used with his consent) ---------- */
@@ -4980,7 +4994,7 @@ function ursCard() {
   const u = nextUrs(); if (!u) return "";
   const first = u.list[0], more = u.list.length > 1 ? ` and ${u.list.length - 1} more` : "";
   const when = u.today ? "URS TODAY" : `NEXT URS · IN ${u.inDays} DAY${u.inDays === 1 ? "" : "S"}`;
-  return label(when, "var(--mar)") + `<button class="fq-wide p-mar" data-urs="1">${med("د", "p-mar")}<span class="t"><span class="kz" lang="ar" dir="rtl" style="font-size:19px;line-height:1.3;text-align:left">${esc(hon(first.name))}</span><small>${first.day} ${HJ.NAMES[u.month ?? HJ.today().month]} · ${esc(first.pr || "")}${more}</small></span><span class="go" aria-hidden="true">›</span></button>`;
+  return label(when, "var(--mar)") + `<button class="fq-wide p-mar" data-urs="1">${med("د", "p-mar")}<span class="t"><span class="kz" lang="ar" dir="rtl" style="font-size:19px;line-height:1.3;text-align:left">${honHtml(first.name)}</span><small>${first.day} ${HJ.NAMES[u.month ?? HJ.today().month]} · ${esc(first.pr || "")}${more}</small></span><span class="go" aria-hidden="true">›</span></button>`;
 }
 function today() {
   const c = ceiling(), w = wordOfDay(), r = recent()[0];
@@ -5012,8 +5026,8 @@ function lisan() {
     ${label("Puzzles", "var(--jade)")}<div class="fq-g3">${tileG("wordsearch", "Word Search", "Find the hidden words", "p-jade")}${tileG("crossword", "Crossword", "Read the clue", "p-jade")}${tileSoon("د", "Word Wheel", "p-jade")}</div>
     ${label("Challenge", "var(--jade)")}${wide('data-open="scrabble"', "ص", "LSD Scrabble", "Build words against the computer", "p-jade")}`;
 }
-const daiRow = (d, cls = "") => `<button class="fq-dai ${cls}" data-dai="${esc(d.id)}"><span class="num">${toAr(d.n)}</span><span class="t"><span class="nm" lang="ar">${esc(hon(d.name))}</span><span class="pl" lang="ar">${d.title ? esc(d.title) : esc([d.pr, d.w ? d.w.replace(/\s*\d{3,4}\s*هـ.*$/, "").replace(/^\s*(\d{1,2})/, (m, x) => toAr(x)) : ""].filter(Boolean).join(" · "))}</span></span></button>`;
-const ursRow = (u, today) => `<button class="fq-dai${today ? " today" : ""}" data-dai="${esc(u.id)}"><span class="num">${toAr(u.day)}</span><span class="t"><span class="nm" lang="ar" style="font-size:16px">${esc(hon(u.name))}</span><span class="pl" lang="ar">${esc(u.pr || "")}</span></span></button>`;
+const daiRow = (d, cls = "") => `<button class="fq-dai ${cls}" data-dai="${esc(d.id)}"><span class="num">${toAr(d.n)}</span><span class="t"><span class="nm" lang="ar">${honHtml(d.name)}</span><span class="pl" lang="ar">${d.title ? esc(d.title) : esc([d.pr, d.w ? d.w.replace(/\s*\d{3,4}\s*هـ.*$/, "").replace(/^\s*(\d{1,2})/, (m, x) => toAr(x)) : ""].filter(Boolean).join(" · "))}</span></span></button>`;
+const ursRow = (u, today) => `<button class="fq-dai${today ? " today" : ""}" data-dai="${esc(u.id)}"><span class="num">${toAr(u.day)}</span><span class="t"><span class="nm" lang="ar" style="font-size:16px">${honHtml(u.name)}</span><span class="pl" lang="ar">${esc(u.pr || "")}</span></span></button>`;
 function tarikh() {
   if (!KW) return `${hall("التاريخ", "Tarikh", "The Duat in order, their mashahid and the Hudud", "p-mar", false)}<div class="sh-card sh-note">Tarikh is on its way to this version of the app.</div>`;
   const L = lessons(), D = KW.duat, by = (n) => D.find((d) => d.n === n), h = HJ.today(), month = ursOfMonth(h.month), up = month.filter((u) => u.day >= h.day).slice(0, 3);
@@ -5096,7 +5110,7 @@ function openDai(id) {
   const d = KW && KW.duat.find((x) => x.id === id), p = KW && KW.p[id];
   if (id && !/^dai5[23]$/.test(id)) { const read = lsj("hDuatRead", {}) || {}; if (!read[id]) { read[id] = 1; try { localStorage.setItem("hDuatRead", JSON.stringify(read)); } catch (e) {} } return openExplorer("#/p/" + encodeURIComponent(id), d ? "Dai " + d.n : "Tarikh"); }
   const x = d || p; if (!x) return;
-  layer(d ? "Dai " + d.n : "Tarikh", `<div class="body"><div class="fq-hall p-mar" style="padding:14px"><div class="ar kz" lang="ar" style="font-size:30px">${esc(hon(x.name))}</div>${x.title ? `<div class="pl kz" lang="ar" style="font-size:16px;color:var(--muted)">${esc(x.title)}</div>` : ""}${x.pr ? `<div class="pl kz" lang="ar" style="font-size:18px;margin-top:6px">${esc(x.pr)} · ${esc(x.w || "")}</div>` : ""}</div><p class="sh-note">A fuller page for this Dai will come from you and your approved sources.</p></div>`);
+  layer(d ? "Dai " + d.n : "Tarikh", `<div class="body"><div class="fq-hall p-mar" style="padding:14px"><div class="ar kz" lang="ar" style="font-size:30px">${honHtml(x.name)}</div>${x.title ? `<div class="pl kz" lang="ar" style="font-size:16px;color:var(--muted)">${esc(x.title)}</div>` : ""}${x.pr ? `<div class="pl kz" lang="ar" style="font-size:18px;margin-top:6px">${esc(x.pr)} · ${esc(x.w || "")}</div>` : ""}</div><p class="sh-note">A fuller page for this Dai will come from you and your approved sources.</p></div>`);
 }
 function openSilsila() {
   const D = KW.duat;
@@ -5226,6 +5240,21 @@ document.addEventListener("change", async (e) => {
   catch (err) { box.checked = !box.checked; toast(errText(err)); }
 });
 
+/* Android's back button (and gesture) steps back inside Huruf instead of leaving the app */
+(() => {
+  const C = window.Capacitor, A = C && C.isNativePlatform && C.isNativePlatform() && C.Plugins && C.Plugins.App;
+  if (!A || !A.addListener) return;
+  A.addListener("backButton", () => {
+    if (document.getElementById("fqLayer")) return closeLayer();
+    if ($("#sh-modal").innerHTML.trim()) return closeSheet();
+    if (S.view === "game") return closeGame();
+    if (S.view === "app" && S.sub) { S.sub = ""; return render(); }
+    if (S.view === "app" && S.tab !== "today") { S.tab = "today"; return render(); }
+    if (["signin", "signup", "forgot"].includes(S.view)) { S.view = "welcome"; return render(); }
+    if (S.view === "niyyat" && S.niyyatAgain) { S.niyyatAgain = false; S.view = "app"; return render(); }
+    A.exitApp();
+  });
+})();
 ["KFGQPC Hafs", "Kanz-al-Lulu"].forEach((f) => { try { document.fonts.load('20px "' + f + '"', "ابت"); } catch (e) {} });
 window.__shell = { get S() { return S; } };
 /* ---------- start: a person who signed in before comes straight back in ---------- */
